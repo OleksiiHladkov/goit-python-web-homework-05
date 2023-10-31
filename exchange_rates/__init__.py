@@ -1,0 +1,1 @@
+from exchange_rates.main import main

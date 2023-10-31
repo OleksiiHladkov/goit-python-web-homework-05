@@ -16,15 +16,25 @@ class ApiClient:
         self.session = session
 
     async def get_data(self, url: str) -> dict:
-        async with self.session.get(url) as response:
-            return await response.json()
+        try:
+            async with self.session.get(url) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    print(f"Error status: {response.status} for {url}")
+        except aiohttp.ClientConnectionError as error:
+            print(f'Connection error: {url}', str(error))
+
+        return None
 
 
-def parsing_user_argv() -> dict:
+def parsing_user_argv(default_argv: list|None == None) -> dict:
+    cur_argv = default_argv if default_argv else sys.argv
+    
     result = {"status": False, "message": "Unknown exeption"}
     
     try:
-        days = int(sys.argv[1])
+        days = int(cur_argv[1])
 
         if days > 10:
             result["status"] = False
@@ -43,13 +53,13 @@ def parsing_user_argv() -> dict:
         return result
 
     currency_list = []
-    last_index = len(sys.argv) - 1
+    last_index = len(cur_argv) - 1
     current_index = 2
     if current_index > last_index:
         currency_list = ["USD", "EUR"]
     else:
         while current_index <= last_index:
-            currency_list.append(sys.argv[current_index])
+            currency_list.append(cur_argv[current_index].upper())
             current_index += 1
 
     result["currency_list"] = currency_list
@@ -73,7 +83,7 @@ def get_period(days_count) -> list[str]:
     return period
 
 
-async def response_handler(period: list[str]):
+async def response_handler(period: list[str]) -> list[dict]:
     if platform.system() == 'Windows':
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
@@ -89,8 +99,8 @@ async def response_handler(period: list[str]):
         return result
     
 
-async def main() -> list|str:   
-    param = parsing_user_argv()
+async def main(default_argv: list|None == None) -> str:   
+    param = parsing_user_argv(default_argv)
 
     if not param.get("status", False):
         return param.get("message")
@@ -102,6 +112,8 @@ async def main() -> list|str:
     
     exchange = []
     for date_exchange in data:
+        if not date_exchange:
+            continue
         date = date_exchange.get("date")
         
         exchange_rate = date_exchange.get("exchangeRate")
@@ -121,13 +133,13 @@ async def main() -> list|str:
     if not len(exchange):
         return "Exchange rates could not be found! Change request and try again."
     
-    return exchange
+    return str(exchange)
 
 
 
     
 if __name__ == "__main__":
-    start = time()
-    r = asyncio.run(main())
+    # start = time()
+    r = asyncio.run(main(None))
     print(r)
-    print(f"Processing time: {time() - start} sec")
+    # print(f"Processing time: {time() - start} sec")
