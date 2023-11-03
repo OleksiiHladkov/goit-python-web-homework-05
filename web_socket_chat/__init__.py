@@ -1,0 +1,1 @@
+from web_socket_chat.server import main

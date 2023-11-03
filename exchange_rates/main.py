@@ -99,7 +99,7 @@ async def response_handler(period: list[str]) -> list[dict]:
         return result
     
 
-async def main(default_argv: list|None == None) -> str:   
+async def main(default_argv: list|None == None) -> list|str:   
     param = parsing_user_argv(default_argv)
 
     if not param.get("status", False):
@@ -133,7 +133,7 @@ async def main(default_argv: list|None == None) -> str:
     if not len(exchange):
         return "Exchange rates could not be found! Change request and try again."
     
-    return str(exchange)
+    return exchange
 
 
 
